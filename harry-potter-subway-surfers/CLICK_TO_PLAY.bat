@@ -1,0 +1,3 @@
+@echo off
+echo Starting Hogwarts Dash in your web browser...
+start http://localhost:8080/

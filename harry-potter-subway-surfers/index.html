@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Hogwarts Dash - Harry Potter 3D Runner</title>
+  
+  <!-- Google Fonts for Harry Potter Gothic aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- Import Three.js via ES Modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 3D Game Viewport -->
+  <div id="game-container">
+    <canvas id="bg-canvas"></canvas>
+  </div>
+
+  <!-- HUD Overlay (Clean, Minimalist & Immersive) -->
+  <div id="hud" class="ui-layer hidden">
+    <!-- Top Stats Bar -->
+    <div class="hud-top">
+      <div class="hud-box score-box">
+        <span class="hud-label">DISTANCE</span>
+        <span id="score-display" class="hud-value">0 m</span>
+        <span id="multiplier-badge" class="multiplier-badge">1x</span>
+      </div>
+
+      <div class="hud-box galleon-box">
+        <div class="galleon-icon">⚡</div>
+        <span id="galleon-display" class="hud-value">0</span>
+      </div>
+
+      <div class="hud-right">
+        <button id="audio-toggle-btn" class="icon-btn" title="Toggle Sound">🔊</button>
+        <button id="pause-btn" class="icon-btn" title="Pause Game">⏸</button>
+      </div>
+    </div>
+
+    <!-- Active Power-Up Timers -->
+    <div id="powerup-bars" class="powerup-container">
+      <div id="bar-broom" class="powerup-bar-item hidden">
+        <span class="power-icon">🧹</span>
+        <span class="power-name">Firebolt Broom</span>
+        <div class="progress-track"><div class="progress-fill broom-fill"></div></div>
+      </div>
+      <div id="bar-patronus" class="powerup-bar-item hidden">
+        <span class="power-icon">🦌</span>
+        <span class="power-name">Patronus Shield</span>
+        <div class="progress-track"><div class="progress-fill patronus-fill"></div></div>
+      </div>
+      <div id="bar-lumos" class="powerup-bar-item hidden">
+        <span class="power-icon">✨</span>
+        <span class="power-name">Lumos Magnet</span>
+        <div class="progress-track"><div class="progress-fill lumos-fill"></div></div>
+      </div>
+      <div id="bar-felix" class="powerup-bar-item hidden">
+        <span class="power-icon">🧪</span>
+        <span class="power-name">Felix Felicis 2x</span>
+        <div class="progress-track"><div class="progress-fill felix-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Pursuer Proximity Warning -->
+    <div id="filch-warning" class="filch-alert hidden">
+      <span class="filch-icon">🐱</span>
+      <span class="filch-text">FILCH & MRS. NORRIS ARE CLOSING IN!</span>
+    </div>
+
+    <!-- Sleek Floating Spell Button -->
+    <div class="hud-bottom">
+      <button id="spell-cast-btn" class="spell-btn" title="Cast Magic Spell">
+        <div class="spell-btn-inner">
+          <span class="spell-icon">✨</span>
+          <span class="spell-text">CAST SPELL</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN MENU MODAL -->
+  <div id="main-menu" class="ui-screen active">
+    <div class="menu-card parchment-bg">
+      <div class="castle-header-badge">🏰 HOGWARTS EXPRESS RUNNER 🏰</div>
+      <h1 class="game-title">HOGWARTS DASH</h1>
+      <p class="game-subtitle">Escape Argus Filch & Dash Along the Hogwarts Tracks!</p>
+
+      <div class="menu-hero-showcase">
+        <div class="character-preview-card">
+          <div class="preview-badge" id="selected-char-name">Harry Potter</div>
+          <div class="preview-house" id="selected-char-house">Gryffindor</div>
+        </div>
+      </div>
+
+      <!-- Interactive Speed Selection Option Box -->
+      <div class="speed-selector-box">
+        <span class="speed-label">⚡ SELECT GAME SPEED:</span>
+        <div class="speed-options">
+          <button class="speed-btn" data-speed="relaxed">🐢 RELAXED</button>
+          <button class="speed-btn active" data-speed="normal">⚡ NORMAL</button>
+          <button class="speed-btn" data-speed="fast">🚀 NIMBUS 2000</button>
+        </div>
+      </div>
+
+      <!-- Instruction: How to Escape Filch -->
+      <div class="filch-guide-box">
+        <div class="guide-title">🐱 HOW TO ESCAPE ARGUS FILCH & MRS. NORRIS:</div>
+        <p class="guide-text">
+          Run cleanly without bumping into trunks or shelves to stay far ahead of Filch! 
+          Collect <strong>Firebolt Brooms 🧹</strong> along the track to fly in the sky! Catch rare <strong>Golden Snitches ⚡</strong> for <strong>+500 BONUS POINTS!</strong>
+        </p>
+      </div>
+
+      <div class="high-score-banner">
+        <span>🏆 BEST DISTANCE:</span>
+        <strong id="menu-high-score">0 m</strong>
+      </div>
+
+      <div class="menu-action-buttons">
+        <button id="start-game-btn" class="btn primary-btn pulse-glow">
+          <span class="btn-icon">⚡</span> RUN FROM FILCH
+        </button>
+        <button id="open-shop-btn" class="btn secondary-btn">
+          <span class="btn-icon">🔮</span> DIAGON ALLEY SHOP
+        </button>
+        <button id="open-controls-btn" class="btn secondary-btn">
+          <span class="btn-icon">📜</span> CONTROLS & HELP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIAGON ALLEY SHOP MODAL -->
+  <div id="shop-screen" class="ui-screen hidden">
+    <div class="menu-card shop-card parchment-bg">
+      <div class="modal-header">
+        <h2>⚡ DIAGON ALLEY SHOP ⚡</h2>
+        <div class="shop-balance">
+          <span class="galleon-icon">⚡</span>
+          <span id="shop-galleon-count">0</span> Snitches
+        </div>
+      </div>
+
+      <div class="shop-tabs">
+        <button class="tab-btn active" data-tab="characters">Wizards & Witches</button>
+        <button class="tab-btn" data-tab="upgrades">Magical Upgrades</button>
+      </div>
+
+      <!-- Characters Tab -->
+      <div id="tab-characters" class="tab-content active">
+        <div class="character-grid">
+          <!-- Harry -->
+          <div class="shop-item-card selected" data-char="harry">
+            <div class="char-avatar harry-avatar">⚡</div>
+            <h3>Harry Potter</h3>
+            <p class="char-desc">Seeker of Gryffindor. Faster broom speed boost!</p>
+            <div class="item-status">
+              <span class="status-tag equipped">EQUIPPED</span>
+            </div>
+          </div>
+
+          <!-- Hermione -->
+          <div class="shop-item-card" data-char="hermione">
+            <div class="char-avatar hermione-avatar">📚</div>
+            <h3>Hermione Granger</h3>
+            <p class="char-desc">Top Student. Lumos Magnet pulls all Snitches & Beans!</p>
+            <div class="item-status">
+              <button class="btn shop-buy-btn" data-cost="150" data-type="char" data-id="hermione">Unlock for 150 ⚡</button>
+            </div>
+          </div>
+
+          <!-- Ron -->
+          <div class="shop-item-card" data-char="ron">
+            <div class="char-avatar ron-avatar">♟️</div>
+            <h3>Ron Weasley</h3>
+            <p class="char-desc">Chess Master. 2x Golden Snitch drops during runs!</p>
+            <div class="item-status">
+              <button class="btn shop-buy-btn" data-cost="100" data-type="char" data-id="ron">Unlock for 100 ⚡</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrades Tab -->
+      <div id="tab-upgrades" class="tab-content hidden">
+        <div class="upgrades-list">
+          <div class="upgrade-row">
+            <div class="upgrade-info">
+              <div class="upgrade-icon">🧹</div>
+              <div>
+                <h4>Firebolt Broomstick Flight</h4>
+                <p>Extend broom flight duration in the sky lane.</p>
+              </div>
+            </div>
+            <button class="btn upgrade-buy-btn" data-type="broom" data-cost="50">Upgrade LVL <span id="lvl-broom">1</span> (50 ⚡)</button>
+          </div>
+
+          <div class="upgrade-row">
+            <div class="upgrade-info">
+              <div class="upgrade-icon">🦌</div>
+              <div>
+                <h4>Expecto Patronum Shield</h4>
+                <p>Increase Patronus shield durability and duration.</p>
+              </div>
+            </div>
+            <button class="btn upgrade-buy-btn" data-type="patronus" data-cost="50">Upgrade LVL <span id="lvl-patronus">1</span> (50 ⚡)</button>
+          </div>
+
+          <div class="upgrade-row">
+            <div class="upgrade-info">
+              <div class="upgrade-icon">✨</div>
+              <div>
+                <h4>Lumos Snitch Magnet</h4>
+                <p>Attract Snitches & Beans from farther distances.</p>
+              </div>
+            </div>
+            <button class="btn upgrade-buy-btn" data-type="lumos" data-cost="50">Upgrade LVL <span id="lvl-lumos">1</span> (50 ⚡)</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="close-shop-btn" class="btn secondary-btn back-btn">⬅ RETURN TO MAIN MENU</button>
+    </div>
+  </div>
+
+  <!-- CONTROLS & GUIDE MODAL -->
+  <div id="controls-screen" class="ui-screen hidden">
+    <div class="menu-card parchment-bg">
+      <h2>📜 GAMEPLAY CONTROLS</h2>
+      <div class="controls-grid">
+        <div class="control-item">
+          <div class="key-badge">A / D or ← / →</div>
+          <span>Change Lane (Left / Right)</span>
+        </div>
+        <div class="control-item">
+          <div class="key-badge">CLICK LEFT / RIGHT</div>
+          <span>Click Left/Right Side of Screen to Switch Lanes</span>
+        </div>
+        <div class="control-item">
+          <div class="key-badge">W or ↑ or SPACE</div>
+          <span>Jump over Trunks & Cauldrons</span>
+        </div>
+        <div class="control-item">
+          <div class="key-badge">S or ↓ or SHIFT</div>
+          <span>Slide under Floating Shelves</span>
+        </div>
+        <div class="control-item">
+          <div class="key-badge">E or F or Button</div>
+          <span>Cast Magic Spell</span>
+        </div>
+        <div class="control-item">
+          <div class="key-badge">SWIPE GESTURES</div>
+          <span>Swipe Left/Right/Up/Down on Mobile</span>
+        </div>
+      </div>
+
+      <!-- How to Escape Filch Box -->
+      <div class="filch-guide-box">
+        <div class="guide-title">🐱 HOW TO ESCAPE ARGUS FILCH & MRS. NORRIS:</div>
+        <p class="guide-text">
+          Run cleanly without hitting obstacles! Bumping into trunks causes you to stumble so Filch gains ground. Collect <strong>Firebolt Brooms 🧹</strong> to fly in the sky!
+        </p>
+      </div>
+
+      <h3>⚡ MAGICAL ITEMS TO COLLECT</h3>
+      <ul class="items-guide">
+        <li><strong>🧹 Firebolt Broomstick:</strong> Collect to take flight into the Sky Lane above all obstacles!</li>
+        <li><strong>⚡ Golden Snitches:</strong> RARE Quidditch Snitch! Catching it grants +500 BONUS POINTS!</li>
+        <li><strong>🍬 Every Flavour Beans:</strong> Bertie Bott's colorful magic beans along the tracks!</li>
+        <li><strong>🦌 Patronus Shield:</strong> Translucent Stag aura against obstacles.</li>
+      </ul>
+
+      <button id="close-controls-btn" class="btn secondary-btn back-btn">⬅ BACK TO MENU</button>
+    </div>
+  </div>
+
+  <!-- PAUSE MENU MODAL -->
+  <div id="pause-screen" class="ui-screen hidden">
+    <div class="menu-card parchment-bg compact">
+      <h2>⏸ GAME PAUSED</h2>
+      <p>Argus Filch is waiting for you...</p>
+      <div class="menu-action-buttons">
+        <button id="resume-btn" class="btn primary-btn">▶ RESUME DASH</button>
+        <button id="restart-from-pause-btn" class="btn secondary-btn">🔄 RESTART RUN</button>
+        <button id="quit-to-menu-btn" class="btn secondary-btn">🏰 MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER MODAL -->
+  <div id="game-over-screen" class="ui-screen hidden">
+    <div class="menu-card parchment-bg game-over-card">
+      <div class="caught-banner">CAUGHT BY ARGUS FILCH!</div>
+      <h2>DETENTION IN THE DUNGEONS!</h2>
+
+      <div class="results-box">
+        <div class="result-row">
+          <span>DISTANCE RUN:</span>
+          <strong id="final-score">0 m</strong>
+        </div>
+        <div class="result-row">
+          <span>GOLDEN SNITCHES CAPTURED:</span>
+          <strong id="final-galleons">0 ⚡</strong>
+        </div>
+        <div id="new-high-score-tag" class="new-record-badge hidden">🎉 NEW HIGH SCORE RECORD! 🎉</div>
+      </div>
+
+      <div class="menu-action-buttons">
+        <button id="restart-btn" class="btn primary-btn pulse-glow">⚡ TRY AGAIN</button>
+        <button id="game-over-shop-btn" class="btn secondary-btn">🔮 DIAGON ALLEY SHOP</button>
+        <button id="game-over-menu-btn" class="btn secondary-btn">🏰 MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Entry (Works 100% on both Local Server & Direct File Opening!) -->
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
