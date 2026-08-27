@@ -24,4 +24,4 @@ Cast Spell	E or F or UI Button	Click Spell Button
 Renderer: Three.js WebGL Engine with BasicShadowMap shadow rendering
 Audio: Web Audio API Synthesizer with memory node disconnections
 Styling: Vanilla CSS parchment card design system with gold foil glows
-Storage: LocalStorage API for saving high scores & unlocked wizards
+Storage: LocalStorage API for saving high scores & unlocked wizards       
